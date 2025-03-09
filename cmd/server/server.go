@@ -1,5 +1,4 @@
-// package server
-package main
+package server
 
 import (
 	"fmt"
@@ -11,7 +10,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the home page")
 }
 
-func main() {
+func Start() {
 	http.HandleFunc("/", homeHandler)
 
 	fmt.Println("Server is running on http://localhost:8080")
