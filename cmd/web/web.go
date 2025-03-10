@@ -27,6 +27,7 @@ func pageHandler(w http.ResponseWriter, r *http.Request) {
 func Serve() {
 	router := mux.NewRouter()
 	router.HandleFunc("/pages/{id:[0-9]+}", pageHandler)
+	router.PathPrefix("/images/").Handler(http.StripPrefix("/images/", http.FileServer(http.Dir("images/"))))
 	http.Handle("/", router)
 
 	http.ListenAndServe(PORT, nil)
