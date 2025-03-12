@@ -59,3 +59,10 @@ func ServePage(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintln(w, html)
 }
+
+func CreateRoute() {
+	route := mux.NewRouter()
+	route.HandleFunc("/page/{id:[0-9]+}", ServePage)
+	http.Handle("/", route)
+	http.ListenAndServe(PORT, nil)
+}
