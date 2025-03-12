@@ -10,5 +10,5 @@ func main() {
 	//server.Start()
 	//web.FileServe()
 	//web.Serve()
-	data.GetData()
+	data.Route()
 }

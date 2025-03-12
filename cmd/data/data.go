@@ -27,7 +27,7 @@ type Page struct {
 	Date    string
 }
 
-func GetData() *sql.DB {
+func getData() *sql.DB {
 	dbConn := fmt.Sprintf("%s:%s@tcp(%s)/%s", DBUser, DBPass, DBHost, DBDbase)
 	db, err := sql.Open("mysql", dbConn)
 	if err != nil {
@@ -40,18 +40,22 @@ func GetData() *sql.DB {
 	return database
 }
 
-func ServePage(w http.ResponseWriter, r *http.Request) {
+func servePage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	pageID := vars["id"]
+	//pageID := vars["id"]
+	pageGUID := vars["guid"]
 	thisPage := Page{}
-	fmt.Println(pageID)
+	fmt.Println(pageGUID)
+	//fmt.Println(pageID)
 
-	err := database.QueryRow("SELECT page_title, page_content, page_date FROM pages WHERE id=?",
-		pageID).Scan(&thisPage.Title, &thisPage.Content, &thisPage.Date)
+	err := database.QueryRow("SELECT page_title, page_content, page_date FROM pages WHERE page_guid=?",
+		/*pageID*/ pageGUID).Scan(&thisPage.Title, &thisPage.Content, &thisPage.Date)
 
 	if err != nil {
-		log.Println("Coudn't get the page: +pageID")
-		log.Println(err.Error())
+		http.Error(w, http.StatusText(404), http.StatusNotFound)
+		//log.Println("Coudn't get the page: +pageID")
+		//log.Println(err.Error())
+		log.Println("couldn't get the page!")
 	}
 
 	html := `<html><head><title>` + thisPage.Title + `</title></head><body><h1>` + thisPage.Title +
@@ -60,9 +64,11 @@ func ServePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, html)
 }
 
-func CreateRoute() {
+func Route() {
+	getData()
 	route := mux.NewRouter()
-	route.HandleFunc("/page/{id:[0-9]+}", ServePage)
+	// route.HandleFunc("/pages/{id:[0-9]+}", servePage)
+	route.HandleFunc("/pages/{guid:[0-9a-zA\\-]+}", servePage)
 	http.Handle("/", route)
 	http.ListenAndServe(PORT, nil)
 }
