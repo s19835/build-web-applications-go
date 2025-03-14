@@ -3,6 +3,7 @@ package data
 import (
 	"database/sql"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 
@@ -22,9 +23,10 @@ const (
 var database *sql.DB
 
 type Page struct {
-	Title   string
-	Content string
-	Date    string
+	Title      string
+	RawContent string
+	Content    template.HTML
+	Date       string
 }
 
 func getData() *sql.DB {
@@ -49,19 +51,23 @@ func servePage(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println(pageID)
 
 	err := database.QueryRow("SELECT page_title, page_content, page_date FROM pages WHERE page_guid=?",
-		/*pageID*/ pageGUID).Scan(&thisPage.Title, &thisPage.Content, &thisPage.Date)
+		/*pageID*/ pageGUID).Scan(&thisPage.Title, &thisPage.RawContent, &thisPage.Date)
+
+	thisPage.Content = template.HTML(thisPage.RawContent)
 
 	if err != nil {
 		http.Error(w, http.StatusText(404), http.StatusNotFound)
 		//log.Println("Coudn't get the page: +pageID")
 		//log.Println(err.Error())
 		log.Println("couldn't get the page!")
+	} else {
+		//html := `<html><head><title>` + thisPage.Title + `</title></head><body><h1>` + thisPage.Title +
+		//`</h1><div>` + thisPage.Content + `</div></body></html>`
+
+		//fmt.Fprintln(w, html)
+		t, _ := template.ParseFiles("./templates/blog.html")
+		t.Execute(w, thisPage)
 	}
-
-	html := `<html><head><title>` + thisPage.Title + `</title></head><body><h1>` + thisPage.Title +
-		`</h1><div>` + thisPage.Content + `</div></body></html>`
-
-	fmt.Fprintln(w, html)
 }
 
 func Route() {
