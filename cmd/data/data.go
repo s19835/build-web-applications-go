@@ -70,11 +70,38 @@ func servePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func RedirIndex(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/home", http.StatusMovedPermanently)
+}
+
+func ServeIndex(w http.ResponseWriter, r *http.Request) {
+	var Pages = []Page{}
+
+	pages, err := database.Query("SELECT page_title, page_content, page_date FROM pages ORDER BY ? DESC", "page_date")
+
+	if err != nil {
+		fmt.Fprintln(w, err.Error())
+	}
+
+	defer pages.Close()
+	for pages.Next() {
+		thisPage := Page{}
+		pages.Scan(&thisPage.Title, &thisPage.RawContent, &thisPage.Date)
+		thisPage.Content = template.HTML(thisPage.RawContent)
+		Pages = append(Pages, thisPage)
+	}
+
+	t, _ := template.ParseFiles("./templates/index.html")
+	t.Execute(w, Pages)
+}
+
 func Route() {
 	getData()
 	route := mux.NewRouter()
 	// route.HandleFunc("/pages/{id:[0-9]+}", servePage)
 	route.HandleFunc("/pages/{guid:[0-9a-zA\\-]+}", servePage)
+	route.HandleFunc("/", RedirIndex)
+	route.HandleFunc("/home", ServeIndex)
 	http.Handle("/", route)
 	http.ListenAndServe(PORT, nil)
 }
