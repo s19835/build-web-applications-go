@@ -9,7 +9,7 @@
     <h1>Homepage</h1>
 
     {{range .}}
-        <div><a href="!">{{.Title}}</a></div>
+        <div><a href="/pages/{{.GUID}}">{{.Title}}</a></div>
         <div>{{.Content}}</div>
         <div>{{.Date}}</div>
     {{end}}
